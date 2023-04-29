@@ -16,6 +16,7 @@
     <input type="submit" value="Generate answer" />
   </form>
   {% if result %}
+  <div class="result">{{ text }}</div>
   <img src="{{ result }}" alt="Graph">
   {% endif %}
 </body>

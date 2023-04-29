@@ -27,7 +27,7 @@ def index():
         result = gpt_worker.get_result()
         graph = RelationsGraph(result)
 
-        return redirect(url_for("index", result=graph.image))
+        return render_template("index.html", result=graph.image, text=form_text)
 
     result = request.args.get("result")
     return render_template("index.html", result=result)

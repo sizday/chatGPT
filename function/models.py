@@ -56,8 +56,8 @@ class CompetitionGPTModel(ChatGPTModel):
         self.response = openai.Completion.create(
             model="text-davinci-003",
             prompt=self.generate_message(),
-            temperature=0.6,
-            max_tokens=800
+            temperature=0.3,
+            max_tokens=1000
         )
 
     def get_result(self):
@@ -79,8 +79,8 @@ class ChatCompetitionGPTModel(ChatGPTModel):
         self.response = openai.ChatCompletion.create(
             model=self.model_name,
             messages=self.generate_message(),
-            temperature=0.6,
-            max_tokens=800
+            temperature=0.3,
+            max_tokens=1000
         )
 
     def get_result(self):

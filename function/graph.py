@@ -31,7 +31,7 @@ class RelationsGraph:
     def __get_all_edges(self) -> list:
         edges = []
         for first_entity, relation, second_entity in self.relations:
-            clear_relation = relation.replace(second_entity, '').replace(first_entity, '')
+            clear_relation = relation.replace(str(second_entity), '').replace(str(first_entity), '')
             edges.append((first_entity, second_entity, {'relation': clear_relation}))
 
         return edges
