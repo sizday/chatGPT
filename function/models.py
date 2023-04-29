@@ -1,9 +1,10 @@
 import openai
+import ast
 
 _file_worker = dict()
 
 
-def find_gpt_worker_by_format(fmt_name: str) -> 'ChatGPTModel':
+def find_gpt_worker_by_format(fmt_name: str):
     reg = _file_worker
     cls = reg.get(fmt_name)
     if not cls:
@@ -35,8 +36,13 @@ class ChatGPTModel:
     def create_response(self):
         pass
 
-    def get_result(self):
+    def get_result(self) -> list:
         pass
+
+    def _generate_prompt(self):
+        prompt = _read_prompt()
+        prompt = prompt + self.input_text + '\n' + 'result:'
+        return prompt
 
 
 @register_gpt_worker
@@ -44,9 +50,7 @@ class CompetitionGPTModel(ChatGPTModel):
     model_name = 'text-davinci-003'
 
     def generate_message(self):
-        prompt = _read_prompt()
-        prompt = prompt + self.input_text + '\n' + 'updates:'
-        return prompt
+        return self._generate_prompt()
 
     def create_response(self):
         self.response = openai.Completion.create(
@@ -57,7 +61,8 @@ class CompetitionGPTModel(ChatGPTModel):
         )
 
     def get_result(self):
-        result = self.response.choices[0].text.strip('.').strip().strip('\n')
+        result_str = self.response.choices[0].text.strip('.').strip().strip('\n')
+        result = ast.literal_eval(result_str)
         return result
 
 
@@ -66,8 +71,7 @@ class ChatCompetitionGPTModel(ChatGPTModel):
     model_name = 'gpt-3.5-turbo'
 
     def generate_message(self):
-        prompt = _read_prompt()
-        prompt = prompt + self.input_text + '\n' + 'updates:'
+        prompt = self._generate_prompt()
         messages = _create_chat_messages(prompt)
         return messages
 
@@ -80,7 +84,8 @@ class ChatCompetitionGPTModel(ChatGPTModel):
         )
 
     def get_result(self):
-        result = self.response.choices[0].message.content.strip('.').strip().strip('\n')
+        result_str = self.response.choices[0].message.content.strip('.').strip().strip('\n')
+        result = ast.literal_eval(result_str)
         return result
 
 

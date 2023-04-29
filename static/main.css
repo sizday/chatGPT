@@ -20,6 +20,14 @@ input {
   color: #353740;
   font-family: "ColfaxAI", Helvetica, sans-serif;
 }
+body,
+select {
+  font-size: 16px;
+  line-height: 24px;
+  color: #353740;
+  margin-bottom: 24px;
+  font-family: "ColfaxAI", Helvetica, sans-serif;
+}
 body {
   display: flex;
   flex-direction: column;
