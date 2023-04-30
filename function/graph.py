@@ -47,7 +47,7 @@ class RelationsGraph:
         return base64_image_prefix + base64_image
 
     def __visualize_graph(self):
-        pos = nx.circular_layout(self.G)
+        pos = nx.shell_layout(self.G)
         nx.draw(self.G, pos, with_labels=True)
         nx.draw_networkx_edge_labels(
             self.G,

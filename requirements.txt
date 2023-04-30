@@ -26,3 +26,4 @@ Werkzeug
 networkx==3.1
 matplotlib==3.7.1
 PILlow==9.5.0
+bs4
