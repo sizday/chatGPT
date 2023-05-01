@@ -1,0 +1,11 @@
+[tool.pytest.ini_options]
+markers = [
+    "test_case_id: идентификатор тест-кейса для ссылок",
+    "test_case_name: название тест-кейса",
+]
+norecursedirs = [
+    ".svn", 
+    "_build", 
+    "tmp*", 
+    ".venv",
+]

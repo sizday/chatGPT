@@ -1,5 +1,6 @@
 import openai
 import ast
+from function.utils import retry
 
 _file_worker = dict()
 
@@ -52,6 +53,7 @@ class CompetitionGPTModel(ChatGPTModel):
     def generate_message(self):
         return self._generate_prompt()
 
+    @retry(max_tries=5, delay_seconds=1)
     def create_response(self):
         self.response = openai.Completion.create(
             model="text-davinci-003",
@@ -75,6 +77,7 @@ class ChatCompetitionGPTModel(ChatGPTModel):
         messages = _create_chat_messages(prompt)
         return messages
 
+    @retry(max_tries=5, delay_seconds=20)
     def create_response(self):
         self.response = openai.ChatCompletion.create(
             model=self.model_name,

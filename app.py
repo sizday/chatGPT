@@ -1,37 +1,36 @@
 import os
-from typing import cast
 import openai
 from flask import Flask, redirect, render_template, request, url_for
-from function.models import find_gpt_worker_by_format, ChatGPTModel
-from function.graph import RelationsGraph
+from function.state import State
+from config import API_KEY
 
 app = Flask(__name__)
-openai.api_key = os.getenv("OPENAI_API_KEY")
+openai.api_key = os.getenv(API_KEY)
+state = State()
 
 
-@app.route("/", methods=("GET", "POST"))
-def index():
-    if request.method == "POST":
-        form_text = request.form["text"]
-        if not form_text:
-            result = request.args.get("result")
-            return render_template("index.html", result=result)
-        model_name = request.form["model"]
-        if not model_name:
-            result = request.args.get("result")
-            return render_template("index.html", result=result)
-        GPTWorker = find_gpt_worker_by_format(model_name)
-        gpt_worker = GPTWorker(form_text)
-        gpt_worker = cast(ChatGPTModel, gpt_worker)
-        gpt_worker.create_response()
-        result = gpt_worker.get_result()
-        graph = RelationsGraph(result)
+@app.route("/", methods=["POST"])
+def index_post():
+    form_text = request.form["text"]
+    model_name = request.form["model"]
 
-        return render_template("index.html", result=graph.image, text=form_text)
+    if form_text and model_name:
+        if request.form['action'] == "Generate graph":
+            state.create_new_state(text=form_text, model_name=model_name)
+        elif request.form['action'] == "Add to current graph":
+            state.update_state(text=form_text, model_name=model_name)
+
+        return render_template("index.html", result=state.graph.image, text=form_text)
 
     result = request.args.get("result")
     return render_template("index.html", result=result)
 
 
+@app.route("/", methods=["GET"])
+def index_get():
+    result = request.args.get("result")
+    return render_template("index.html", result=result)
+
+
 if __name__ == '__main__':
-   app.run(debug=True)
+    app.run(debug=True)

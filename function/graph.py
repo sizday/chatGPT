@@ -2,11 +2,18 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from io import BytesIO
 import base64
+plt.switch_backend('agg')
 
 
 class RelationsGraph:
     def __init__(self, relations):
         self.relations = relations
+        self.str_relation = str(relations)
+        self.G = self.create_graph_from_list()
+        self.image = self.save_visualise_graph()
+
+    def merge(self, relations):
+        self.relations += relations
         self.str_relation = str(relations)
         self.G = self.create_graph_from_list()
         self.image = self.save_visualise_graph()
@@ -47,7 +54,7 @@ class RelationsGraph:
         return base64_image_prefix + base64_image
 
     def __visualize_graph(self):
-        pos = nx.circular_layout(self.G)
+        pos = nx.shell_layout(self.G)
         nx.draw(self.G, pos, with_labels=True)
         nx.draw_networkx_edge_labels(
             self.G,
