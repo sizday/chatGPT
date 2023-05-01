@@ -40,19 +40,30 @@ def chat_adding_relations():
             df['Relations'][sample_index] = current_relations
             save_csv(df, CSV_FILEPATH)
             return
-        if text_relation == 'clear':
+        elif text_relation == 'clear':
             print(f'Все текущие связи для данной записи удалены')
             df['Relations'][sample_index] = []
             save_csv(df, CSV_FILEPATH)
             return
-        new_relation_list = text_relation.split(',')
-        if len(new_relation_list) != 3:
-            print('Некорректная запись')
-        elif new_relation_list in current_relations:
-            print('Данная связь уже есть в списке')
+        elif text_relation == 'delete':
+            text_relation = input(f'Введите запись на удаление: ')
+            delete_relation_list = text_relation.split(',')
+            delete_relation_list = [elem.strip().lower() for elem in delete_relation_list]
+            try:
+                current_relations.remove(delete_relation_list)
+                print(f"Успешное удаление элемента {delete_relation_list}")
+            except Exception:
+                print(f"Ошибка удаление элемента {delete_relation_list}")
         else:
-            print(f'Добавлена запись {new_relation_list}')
-            current_relations.append(new_relation_list)
+            new_relation_list = text_relation.split(',')
+            new_relation_list = [elem.strip().lower() for elem in new_relation_list]
+            if len(new_relation_list) != 3:
+                print('Некорректная запись')
+            elif new_relation_list in current_relations:
+                print('Данная связь уже есть в списке')
+            else:
+                print(f'Добавлена запись {new_relation_list}')
+                current_relations.append(new_relation_list)
 
 
 def main():
