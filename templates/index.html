@@ -7,13 +7,15 @@
 <body>
   <h3>Enter your prompt</h3>
   <form action="/" method="post">
-    <input type="text" name="text" placeholder="Enter text" required />
-    <select name="model" id="model-select">
-      <option value="">--Please choose an option--</option>
-      <option value="text-davinci-003">text-davinci-003</option>
-      <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
-    </select>
-    <input type="submit" value="Generate answer" />
+      <input type="text" name="text" placeholder="Enter text" required />
+      <select name="model" id="model-select">
+          <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+          <option value="text-davinci-003">text-davinci-003</option>
+      </select>
+      <div class="submit">
+          <input type="submit" name="action" value="Generate graph" />
+          <input type="submit" name="action" value="Add to current graph" />
+      </div>
   </form>
   {% if result %}
   <div class="result">{{ text }}</div>

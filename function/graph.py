@@ -2,11 +2,18 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from io import BytesIO
 import base64
+plt.switch_backend('agg')
 
 
 class RelationsGraph:
     def __init__(self, relations):
         self.relations = relations
+        self.str_relation = str(relations)
+        self.G = self.create_graph_from_list()
+        self.image = self.save_visualise_graph()
+
+    def merge(self, relations):
+        self.relations += relations
         self.str_relation = str(relations)
         self.G = self.create_graph_from_list()
         self.image = self.save_visualise_graph()
