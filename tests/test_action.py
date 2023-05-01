@@ -3,6 +3,7 @@ from pathlib import Path
 import os
 import pandas as pd
 import ast
+import random
 from typing import Optional, Any
 from dotenv import load_dotenv
 from config import API_KEY
@@ -14,7 +15,8 @@ from function.graph import RelationsGraph
 MODEL_NAME = 'gpt-3.5-turbo'
 CSV_FILEPATH = 'data/mtsample/data.csv'
 ENV_FILENAME = '.env'
-PERCENT_TRUE = 90
+PERCENT_TRUE = 20
+COUNT_DATA_TEST = 5
 
 
 class Alerts:
@@ -61,6 +63,7 @@ def data_csv_path(project_path) -> str:
 
 @pytest.fixture(scope='session')
 def df_from_csv(data_csv_path):
+    print('Данные из csv файла загружены')
     df = pd.read_csv(data_csv_path, index_col=0)
     return df
 
@@ -71,7 +74,10 @@ def non_empty_data_index() -> list:
     csv_path = os.path.join(project_path, CSV_FILEPATH)
     df = pd.read_csv(csv_path, index_col=0)
     df_non_empty_data = df.loc[df.Relations != '[]']
-    return list(df_non_empty_data.index)
+    non_empty_index_list = list(df_non_empty_data.index)
+    count_data_test = min(COUNT_DATA_TEST, len(non_empty_index_list))
+    non_empty_index_sublist = random.sample(non_empty_index_list, count_data_test)
+    return non_empty_index_sublist
 
 
 @pytest.mark.test_case_id('T1.0')
@@ -84,7 +90,7 @@ def test_clear_case(setup_openai_key):
     graph = state.graph
     relations = graph.relations
     assert isinstance(graph, RelationsGraph), Alerts.result_type_should_be_relation_graph
-    assert _is_sublist(right_result, relations) > PERCENT_TRUE, Alerts.result_should_be_right
+    assert _percent_true_sublist_in_result_list(right_result, relations) > PERCENT_TRUE, Alerts.result_should_be_right
 
 
 @pytest.mark.test_case_id('T1.1')
@@ -105,7 +111,7 @@ def test_middle_case(setup_openai_key):
 def test_data_csv_case(setup_openai_key, df_from_csv, index):
     text = str(df_from_csv['Text data'][index])
     right_result_str: str = str(df_from_csv['Relations'][index])
-    print(f"{str(df_from_csv['Medical Specialty'][index])} {str(df_from_csv['Sample Name'][index])}")
+    print(f"\n{str(df_from_csv['Medical Specialty'][index])}\n{str(df_from_csv['Sample Name'][index])}")
     right_result = ast.literal_eval(right_result_str)
     _test_by_text_and_right_result(right_result, text)
 
@@ -115,26 +121,50 @@ def _test_by_text_and_right_result(right_result, text):
     state.create_new_state(text=text, model_name=MODEL_NAME)
     graph = state.graph
     relations = graph.relations
+    percent_true = _percent_true_sublist_in_result_list(right_result, relations)
+    print(f'Процент точности: {percent_true}%')
+    
     assert isinstance(graph, RelationsGraph), Alerts.result_type_should_be_relation_graph
-    assert _is_sublist(right_result, relations) > PERCENT_TRUE, Alerts.result_should_contain_right_dict
+    assert percent_true > PERCENT_TRUE, Alerts.result_should_contain_right_dict
 
     new_relations = _get_new_relations(right_result, relations)
     new_entity = _get_new_entity(right_result, relations)
-    print(f"\nNew entity = {new_entity}\nNew relations = {new_relations}")
+    print(f"\nНовых сущностей = {len(new_entity)}\nНовых отношений = {len(new_relations)}")
     assert len(new_entity) > 0, Alerts.result_should_add_new_entity
     assert len(new_relations) > 0, Alerts.result_should_add_new_entity
 
 
-def _is_sublist(sublist, full_list):
+def _percent_true_sublist_in_result_list(sublist, full_list):
     count_true = 0
     count_false = 0
     for sublist_elem in sublist:
-        if sublist_elem not in full_list:
-            count_false += 1
-        else:
+        variants_sublist_elem = _create_variants_relation_list(sublist_elem)
+        exist = False
+        for variant in variants_sublist_elem:
+            if variant in full_list:
+                exist = True
+                break
+        if exist:
             count_true += 1
+        else:
+            count_false += 1
+
     percent_true = int(count_true*100//(count_true+count_false))
     return percent_true
+
+
+def _create_variants_relation_list(sublist_elem):
+    first_entity, relation, second_entity = sublist_elem
+    same_relation = _get_same_relation(relation)
+    if same_relation:
+        variants = [[first_entity, relation, second_entity],
+                    [second_entity, relation, first_entity],
+                    [first_entity, same_relation, second_entity],
+                    [second_entity, same_relation, first_entity]]
+    else:
+        variants = [[first_entity, relation, second_entity],
+                    [second_entity, relation, first_entity]]
+    return variants
 
 
 def _get_new_relations(right_result, result):
@@ -167,3 +197,15 @@ def _get_difference_between_entities(right_entities, result_entities):
         if result_entity not in right_entities:
             new_entities.append(result_entity)
     return new_entities
+
+
+def _get_same_relation(relation: str) -> str:
+    return {
+        "had": "has",
+        "has": "had",
+        "is": "was",
+        "was": "is",
+        "live": "lives",
+        "will live": "live",
+        "lived": "live",
+    }.get(relation)

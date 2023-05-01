@@ -65,6 +65,9 @@ class CompetitionGPTModel(ChatGPTModel):
     def get_result(self):
         result_str = self.response.choices[0].text.strip('.').strip().strip('\n')
         result = ast.literal_eval(result_str)
+        for elem in result:
+            if len(elem) < 3:
+                result.remove(elem)
         return result
 
 
@@ -89,6 +92,9 @@ class ChatCompetitionGPTModel(ChatGPTModel):
     def get_result(self):
         result_str = self.response.choices[0].message.content.strip('.').strip().strip('\n')
         result = ast.literal_eval(result_str)
+        for elem in result:
+            if len(elem) < 3:
+                result.remove(elem)
         return result
 
 
