@@ -13,10 +13,16 @@ from function.state import State
 from function.graph import RelationsGraph
 
 MODEL_NAME = 'gpt-3.5-turbo'
+# MODEL_NAME = 'text-davinci-003'
 CSV_FILEPATH = 'data/mtsample/data.csv'
 ENV_FILENAME = '.env'
-PERCENT_TRUE = 20
-COUNT_DATA_TEST = 5
+PERCENT_RECALL = 0
+PERCENT_PRECISION_RELATIONS = 0
+PERCENT_PRECISION_ENTITY = 0
+COUNT_DATA_TEST = 100
+overall_recall = []
+overall_precision_relations = []
+overall_precision_entity = []
 
 
 class Alerts:
@@ -68,6 +74,16 @@ def df_from_csv(data_csv_path):
     return df
 
 
+@pytest.fixture()
+def create_recall_precision_result():
+    yield  # здесь происходит тестирование
+
+    with open('C://Temp//Log.txt', 'a') as f:
+        f.write(str(overall_recall) + '\n')
+        f.write(str(overall_precision_relations) + '\n')
+        f.write(str(overall_precision_entity) + '\n\n')
+
+
 def non_empty_data_index() -> list:
     test_path = os.path.dirname(__file__)
     project_path = os.path.dirname(test_path)
@@ -90,7 +106,9 @@ def test_clear_case(setup_openai_key):
     graph = state.graph
     relations = graph.relations
     assert isinstance(graph, RelationsGraph), Alerts.result_type_should_be_relation_graph
-    assert _percent_true_sublist_in_result_list(right_result, relations) > PERCENT_TRUE, Alerts.result_should_be_right
+    tp, fn = _get_tp_and_fn(right_result, relations)
+    recall = round(tp*100/tp+fn, 2)
+    assert recall > PERCENT_RECALL, Alerts.result_should_be_right
 
 
 @pytest.mark.test_case_id('T1.1')
@@ -121,22 +139,30 @@ def _test_by_text_and_right_result(right_result, text):
     state.create_new_state(text=text, model_name=MODEL_NAME)
     graph = state.graph
     relations = graph.relations
-    percent_true = _percent_true_sublist_in_result_list(right_result, relations)
-    print(f'Процент точности: {percent_true}%')
+    tp, fn = _get_tp_and_fn(right_result, relations)
+    recall = round(tp * 100 / (tp + fn), 2)
+    overall_recall.append(recall)
+    print(f'Recall = {recall}%')
     
     assert isinstance(graph, RelationsGraph), Alerts.result_type_should_be_relation_graph
-    assert percent_true > PERCENT_TRUE, Alerts.result_should_contain_right_dict
+    assert recall > PERCENT_RECALL, Alerts.result_should_contain_right_dict
 
     new_relations = _get_new_relations(right_result, relations)
     new_entity = _get_new_entity(right_result, relations)
-    print(f"\nНовых сущностей = {len(new_entity)}\nНовых отношений = {len(new_relations)}")
-    assert len(new_entity) > 0, Alerts.result_should_add_new_entity
-    assert len(new_relations) > 0, Alerts.result_should_add_new_entity
+    relations_fp = len(new_relations)
+    entity_fp = len(new_entity)
+    relations_precision = round(tp * 100 / (tp + relations_fp), 2)
+    entity_precision = round(tp * 100 / (tp + entity_fp), 2)
+    overall_precision_relations.append(relations_precision)
+    overall_precision_entity.append(entity_precision)
+    print(f"\nPrecision relations = {relations_precision}\nPrecision entity = {entity_precision}")
+    assert relations_precision > PERCENT_PRECISION_RELATIONS, Alerts.result_should_add_new_entity
+    assert entity_precision > PERCENT_PRECISION_ENTITY, Alerts.result_should_add_new_entity
 
 
-def _percent_true_sublist_in_result_list(sublist, full_list):
-    count_true = 0
-    count_false = 0
+def _get_tp_and_fn(sublist, full_list):
+    TP = 0
+    FN = 0
     for sublist_elem in sublist:
         variants_sublist_elem = _create_variants_relation_list(sublist_elem)
         exist = False
@@ -145,12 +171,11 @@ def _percent_true_sublist_in_result_list(sublist, full_list):
                 exist = True
                 break
         if exist:
-            count_true += 1
+            TP += 1
         else:
-            count_false += 1
+            FN += 1
 
-    percent_true = int(count_true*100//(count_true+count_false))
-    return percent_true
+    return TP, FN
 
 
 def _create_variants_relation_list(sublist_elem):

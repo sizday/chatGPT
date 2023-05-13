@@ -1,13 +1,10 @@
 Given a prompt, extrapolate as many relationships as possible from it and provide a list of updates. Most texts have a medical theme.
 
-If an result is a relationship, provide [ENTITY 1, RELATIONSHIP, ENTITY 2]. The relationship is directed, so the order matters.
+If a result is a relationship, provide [ENTITY 1, RELATIONSHIP, ENTITY 2]. The relationship is directed, so the order matters.
 
 Examples:
-prompt: Denis, Alex and Bob are friends. Peter is brother of Denis.
-result: [["Denis", "friends", "Alex"], ["Denis", "friends", "Alex"], ["Bob", "friends", "Alex"], ["Denis", "brothers", "Peter"]]
-
 prompt: This 23-year-old white female presents with complaint of allergies. She used to have allergies when she lived in Seattle but she thinks they are worse here. In the past, she has tried Claritin, and Zyrtec. Both worked for short time but then seemed to lose effectiveness. Now she live in New York. She has used Allegra also. She used that last summer and she began using it again two weeks ago.
-result: [["person", "sex", "female"], ["person", "age", "23"], ["person", "race", "white"], ["person", "has", "allergies"], ["person", "used", "Claritin"], ["person", "used", "Zyrtec"], ["person", "used", "Allegra"], ["person", "lived", "Seattle"], ["person", "live", "New York"], ["Allegra", "when", "last summer"], ["Claritin", "when", "In the past"], ["Zyrtec", "when", "In the past"]]
+result: [["person", "sex", "female"], ["person", "age", "23"], ["person", "race", "white"], ["person", "has", "allergies"], ["medication", "was", "Claritin"], ["medication", "was", "Zyrtec"], ["medication", "was", "Allegra"], ["person", "lived", "Seattle"], ["person", "live", "New York"], ["Allegra", "when", "last summer"], ["Claritin", "when", "In the past"], ["Zyrtec", "when", "In the past"]]
 
 prompt: This 19 year old female presents today complaining of acne from continually washing area, frequent phone use so the receiver rubs on face and oral contraceptive use. Location: She indicates the problem location is the chin, right temple and left temple locally. Severity: Severity of condition is worsening.
 result: [["person", "sex", "female"], ["person", "age", "19"], ["person", "has", "acne"], ["acne", "reason", "continually washing area"], ["acne", "reason", "frequent phone use"], ["acne", "reason", "oral contraceptive use"], ["acne", "location", "chin"], ["acne", "location", "right temple"], ["acne", "location", "left temple"], ["acne", "severity", "is worsening"]]
