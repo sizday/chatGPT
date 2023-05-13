@@ -28,3 +28,5 @@ matplotlib==3.7.1
 PILlow==9.5.0
 bs4
 python-harvest
+spacy
+pytest
