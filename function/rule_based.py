@@ -89,7 +89,8 @@ class RuleBasedExtractor:
 
 
 if __name__ == "__main__":
-    test_text = "Alex presents with complaint of allergies. The drawdown process is governed by astm standard d823."
+    test_text = "Alex presents with complaint of allergies. The patient has an acute allergic reaction. " \
+                "Etiology uncertain, however, suspicious for Keflex."
     ext = RuleBasedExtractor(test_text)
     test_result = ext.get_result()
     print(test_result)
