@@ -11,6 +11,7 @@ from config import API_KEY
 import openai
 from function.state import State
 from function.graph import RelationsGraph
+from function.rule_based import RuleBasedExtractor
 
 MODEL_NAME = 'gpt-3.5-turbo'
 # MODEL_NAME = 'text-davinci-003'
@@ -120,7 +121,7 @@ def test_middle_case(setup_openai_key):
     right_result = [['person', 'sex', 'female'], ['person', 'age', '23'], ['person', 'race', 'white'],
                     ['person', 'has', 'allergies'], ['person', 'used', 'Claritin'], ['person', 'used', 'Zyrtec'],
                     ['person', 'lived', 'Seattle']]
-    _test_by_text_and_right_result(right_result, text)
+    _test_by_gpt_and_right_result(right_result, text)
 
 
 @pytest.mark.test_case_id('T1.2')
@@ -131,22 +132,42 @@ def test_data_csv_case(setup_openai_key, df_from_csv, index):
     right_result_str: str = str(df_from_csv['Relations'][index])
     print(f"\n{str(df_from_csv['Medical Specialty'][index])}\n{str(df_from_csv['Sample Name'][index])}")
     right_result = ast.literal_eval(right_result_str)
-    _test_by_text_and_right_result(right_result, text)
+    _test_by_gpt_and_right_result(right_result, text)
 
 
-def _test_by_text_and_right_result(right_result, text):
+@pytest.mark.test_case_id('T2.1')
+@pytest.mark.test_case_name('Проверка по всем непустым данным rule-based подходом')
+@pytest.mark.parametrize("index", non_empty_data_index())
+def test_data_csv_rule_based_case(setup_openai_key, df_from_csv, index):
+    text = str(df_from_csv['Text data'][index])
+    right_result_str: str = str(df_from_csv['Relations'][index])
+    print(f"\n{str(df_from_csv['Medical Specialty'][index])}\n{str(df_from_csv['Sample Name'][index])}")
+    right_result = ast.literal_eval(right_result_str)
+    _test_by_rule_based_text_and_right_result(right_result, text)
+
+
+def _test_by_rule_based_text_and_right_result(right_result, text):
+    extractor = RuleBasedExtractor(text)
+    relations = extractor.get_result()
+    graph = RelationsGraph(relations)
+    _check_text_and_right_result(graph, relations, right_result)
+
+
+def _test_by_gpt_and_right_result(right_result, text):
     state = State()
     state.create_new_state(text=text, model_name=MODEL_NAME)
     graph = state.graph
     relations = graph.relations
+    _check_text_and_right_result(graph, relations, right_result)
+
+
+def _check_text_and_right_result(graph, relations, right_result):
     tp, fn = _get_tp_and_fn(right_result, relations)
     recall = round(tp * 100 / (tp + fn), 2)
     overall_recall.append(recall)
     print(f'Recall = {recall}%')
-    
     assert isinstance(graph, RelationsGraph), Alerts.result_type_should_be_relation_graph
     assert recall > PERCENT_RECALL, Alerts.result_should_contain_right_dict
-
     new_relations = _get_new_relations(right_result, relations)
     new_entity = _get_new_entity(right_result, relations)
     relations_fp = len(new_relations)
