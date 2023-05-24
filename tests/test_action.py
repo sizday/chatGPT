@@ -4,7 +4,6 @@ import os
 import pandas as pd
 import ast
 import random
-from typing import Optional, Any
 from dotenv import load_dotenv
 from config import API_KEY
 
@@ -12,14 +11,15 @@ import openai
 from function.state import State
 from function.graph import RelationsGraph
 from function.rule_based import RuleBasedExtractor
+from function.utils import timeit
 
 MODEL_NAME = 'gpt-3.5-turbo'
 # MODEL_NAME = 'text-davinci-003'
 CSV_FILEPATH = 'data/mtsample/data.csv'
 ENV_FILENAME = '.env'
-PERCENT_RECALL = 0
-PERCENT_PRECISION_RELATIONS = 0
-PERCENT_PRECISION_ENTITY = 0
+PERCENT_RECALL = -1
+PERCENT_PRECISION_RELATIONS = -1
+PERCENT_PRECISION_ENTITY = -1
 COUNT_DATA_TEST = 100
 overall_recall = []
 overall_precision_relations = []
@@ -127,6 +127,7 @@ def test_middle_case(setup_openai_key):
 @pytest.mark.test_case_id('T1.2')
 @pytest.mark.test_case_name('Проверка по всем непустым данным')
 @pytest.mark.parametrize("index", non_empty_data_index())
+@timeit
 def test_data_csv_case(setup_openai_key, df_from_csv, index):
     text = str(df_from_csv['Text data'][index])
     right_result_str: str = str(df_from_csv['Relations'][index])
@@ -138,6 +139,7 @@ def test_data_csv_case(setup_openai_key, df_from_csv, index):
 @pytest.mark.test_case_id('T2.1')
 @pytest.mark.test_case_name('Проверка по всем непустым данным rule-based подходом')
 @pytest.mark.parametrize("index", non_empty_data_index())
+@timeit
 def test_data_csv_rule_based_case(setup_openai_key, df_from_csv, index):
     text = str(df_from_csv['Text data'][index])
     right_result_str: str = str(df_from_csv['Relations'][index])
